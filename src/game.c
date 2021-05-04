@@ -188,8 +188,6 @@ void game_gameplay_render(The_Game *game)
 
 void game_gameplay_handle(The_Game *game)
 {
-    // WTF IS THAT???
-    // ?????
     if (game->time_remaining <= 0) {
         game->state = GAME_STATE_FAIL;
         return;

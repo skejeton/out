@@ -8,7 +8,7 @@ Download the latest release from [https://iotasieve.itch.io/out](https://iotasie
 
 The game is cross compilable on linux
 
-**To compile to web-assembly* make sure you have emscripten installed, then run `make wasm`
+**To compile to web-assembly** make sure you have emscripten installed, then run `make wasm`
 
 **To compile to windows** make sure you have `x86_64-w64-mingw32-gcc` installed, also, you will need an SDL2.dll file to be able to run this game, it has to be near the binary.
 

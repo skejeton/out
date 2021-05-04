@@ -21,7 +21,8 @@ TODO, I'd appreciate if someone would do a pull request on that ;)
 ## MacOS
 
 TODO, I'd appreciate if someone would do a pull request on that ;)
-But to be fair the make file might work on mac-os, you can probably even run `make linux` to build a mac-os versiont.
+
+But to be fair the make file might work on mac-os, you can probably even run `make linux` to build a mac-os version.
 
 # Rights on assets
 

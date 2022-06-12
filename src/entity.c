@@ -75,7 +75,7 @@ void game_add_zombie(The_Game *game, double x, double y)
 
 void game_handle_entities(The_Game *game)
 {
-    for (int i = 0; i < game->gameplay.entity_count; i++)
+    for (int i = 0; i < 256; i++)
     {
         Game_Entity *entity = &game->gameplay.entities[i];
         if (entity->entity_type == GAME_ENTITY_NONE) continue;
@@ -125,7 +125,7 @@ void game_handle_entities(The_Game *game)
                         // I have no clue what I'm doing, this code is bad
                         // And if needed, I will refactor it!
                         // This is a very bad fix but I don't care
-                        for (int k = 0; k < game->gameplay.entity_count; k++)
+                        for (int k = 0; k < 256; k++)
                         {
                             Game_Entity *sub_entity = &game->gameplay.entities[k];
                             if (sub_entity->entity_type == GAME_ENTITY_NONE) continue;
@@ -175,7 +175,7 @@ void game_handle_entities(The_Game *game)
 
 void game_render_entities(The_Game *game)
 {
-    for (int i = 0; i < game->gameplay.entity_count; i++)
+    for (int i = 0; i < 256; i++)
     {
         Game_Entity *entity = &game->gameplay.entities[i];
         if (entity->entity_type == GAME_ENTITY_NONE) continue;       

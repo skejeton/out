@@ -1,6 +1,6 @@
 # Running the game
 
-Download the latest release from [https://iotasieve.itch.io/out](https://iotasieve.itch.io/out) if you don't want to build the game
+Download the latest release from [https://skejeton.itch.io/out](https://skejeton.itch.io/out) if you don't want to build the game
 
 # Building the game
 

@@ -50,8 +50,12 @@ void game_render_room(The_Game *game, Game_Room *room, int x, int y)
             {
                 int mazeIdx = (room->maze_type-1);
                 
-                int pix = game_texture_pixel(&game->textures.mazes, (i-1)+mazeIdx*9, (j-1));
-                if (pix & 0xFF000000)
+                uint32_t pix = game_texture_pixel(&game->textures.mazes, (i-1)+mazeIdx*9, (j-1));
+                if ((pix ^ 0xFFFF0000) == 0)
+                {
+                    game_screen_blit_rect(&game->textures.tileset, tilepos.x, tilepos.y, 48, 48, 16, 16);
+                }
+                if ((pix ^ 0xFF000000) == 0)
                 {
                     game_screen_blit_rect(&game->textures.tileset, tilepos.x, tilepos.y, 48, 64, 16, 16);
                     for (int i = 0; i < 10; i += 1) {
@@ -341,8 +345,21 @@ void game_create_room_colliders(The_Game *game, Game_Room *r)
             {
                 for (int j = 0; j < 9; j++)
                 {
-                    int pix = game_texture_pixel(&game->textures.mazes, i+mazeIdx*9, j);
-                    if (pix & 0xFF000000)
+                    uint32_t pix = game_texture_pixel(&game->textures.mazes, i+mazeIdx*9, j);
+                    if ((pix ^ 0xFFFF0000) == 0)
+                    {
+                        Game_Collider c;
+                        c.r.x = 16*i+16+r->x*16*11;
+                        c.r.y = 16*j+16+r->y*16*11;
+                        c.r.w = 16;
+                        c.r.h = 16;
+                        c.solid = false;
+                        c.projectile = false;
+                        c.zombie = true;
+                        c.active = true;
+                        vec_push(game->gameplay.colliders, c);
+                    }
+                    if ((pix ^ 0xFF000000) == 0)
                     {
                         Game_Collider c;
                         c.r.x = 16*i+16+r->x*16*11;

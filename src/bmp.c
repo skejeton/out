@@ -6,19 +6,11 @@
 
 Game_Texture game_read_bmp(char *path)
 {
-    
-    File f = read_file(path);
-    
-    u32 width = *((u32*)(f.buf+18));
-    u32 height = *((u32*)(f.buf+22));
-    if (width < 4000 && height < 4000)
+    SDL_Surface *s = SDL_LoadBMP(path);
+    if (!s)
     {
-        u32 *texloc = (u32*)(f.buf+*((u32*)(f.buf+10)));
-        Game_Texture res = game_texture_from_bytes_argb(width, height, texloc);
-        
-        return res;
+        printf("error loading bmp: %s\n", SDL_GetError());
+        exit(1);
     }
-    delete(f.buf);
-    printf("Failed loading bitmap\n");
-    exit(-1);
+    return game_texture_from_surface(s);
 }

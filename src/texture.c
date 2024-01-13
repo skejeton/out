@@ -173,26 +173,15 @@ void flip_surface(SDL_Surface* surface)
     SDL_UnlockSurface(surface);
 }
 
-Game_Texture game_texture_from_bytes_argb(u32 width, u32 height, u32 *bytes) {
-    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(bytes,
-                             width,
-                             height,
-                             32,
-                             4*width,
-                             0x00FF0000,
-                             0x0000FF00,
-                             0x000000FF,
-                             0xFF000000);
-    flip_surface(surface);
-
+Game_Texture game_texture_from_surface(SDL_Surface *surface) {
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
     return (Game_Texture) {
-        .width = width,
-        .height = height,
+        .width = surface->w,
+        .height = surface->h,
         .texture = tex,
         .surface = surface
     };
-} 
+}
 
 void game_screen_blit_at(Game_Texture *tex, int x, int y)
 {

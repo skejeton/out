@@ -2,6 +2,7 @@
 #include "bmath.h"
 #include "entity.h"
 #include <stdio.h>
+#include <SDL2/SDL.h>
 
 /// BAD
 void game_player_handle(The_Game *game)
@@ -74,7 +75,7 @@ void game_player_handle(The_Game *game)
             }
             else if (srect.zombie && srect.active)
             {
-                game->state = 3;
+                game->state = 3; // GAME_STATE_FAIL
             }
         }
     }
@@ -149,5 +150,4 @@ void game_player_render(The_Game *game)
             game_screen_blit_rect(&game->textures.tileset, r.x, r.y, ((int)(game->uptime * 5) % 3)*16, 0+80, 16, 16);
         }  
     }
-    
 }

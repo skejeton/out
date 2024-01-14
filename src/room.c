@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
+#include <assert.h>
 
 void game_render_room(The_Game *game, Game_Room *room, int x, int y)
 {
@@ -279,8 +280,8 @@ Game_Room* game_create_rooms(The_Game *game, int count)
 {
     Vec(GVec2) vec = vec_new(Game_Vec2);
     Game_Room *room = game_create_rooms_rec(game, game->gameplay.root_room, 0, 0, count, 0, &vec);
-    if (game->gameplay.exit_room)  
-        game->gameplay.exit_room->maze_type = 0;
+    assert(game->gameplay.exit_room);
+    game->gameplay.exit_room->maze_type = 0;
     vec_drop(vec);
     return room;
 }

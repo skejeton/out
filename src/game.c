@@ -78,6 +78,9 @@ void game_generic_handle(The_Game *game)
         Keyboard_Event kev = ev.event_data.keyboard;
         switch (convert_scancode_to_char(kev.key))
         {
+        case 'r':
+            game->state = GAME_STATE_MENU;
+            break;
         case 'w':
             game->keys.w = kev.pressed;
             break;
@@ -286,8 +289,11 @@ The_Game game_init(int room_count)
     }
 
     
-    game_create_rooms(&g, room_count);
-    game_create_room_colliders(&g, g.gameplay.root_room);
+    if (room_count > 0) {
+        game_create_rooms(&g, room_count);
+        g.gameplay.root_room->maze_type = 0;
+        game_create_room_colliders(&g, g.gameplay.root_room);
+    }
     
     return g;
 }

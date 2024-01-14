@@ -371,7 +371,6 @@ void game_create_room_colliders(The_Game *game, Game_Room *r)
                         c.zombie = false;
                         c.active = true;
                         vec_push(game->gameplay.colliders, c);
-
                     }
                 }
             }

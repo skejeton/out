@@ -4,23 +4,17 @@
 #include <stdio.h>
 
 /// BAD
-bool apressed = false;
 void game_player_handle(The_Game *game)
 {
     game->gameplay.cam.x = game->gameplay.player.pos.x;
     game->gameplay.cam.y = game->gameplay.player.pos.y;
 
     double sp = 10;
-    if (game->keys.a1)
-    {
-        apressed = true;
-    }
+    
     if (game->keys.a2)
     {
         sp = 20;
-        apressed = false;
     }
-
 
     bool pressed = false;
     if (game->keys.w)
@@ -93,9 +87,8 @@ void game_player_handle(The_Game *game)
     game->gameplay.player.pos.x += game->gameplay.player.vel.x*game->delta;
     game->gameplay.player.pos.y += game->gameplay.player.vel.y*game->delta;
 
-    if (!game->keys.a1 && apressed == true)
+    if (!game->keys.a1 && game->keys.a2)
     {
-        apressed = false;
         if (game->gameplay.player.dir == 1)
             game_add_projectile(game, game->gameplay.player.pos.x, game->gameplay.player.pos.y, -100, 0);
         if (game->gameplay.player.dir == 3)
@@ -111,10 +104,6 @@ void game_player_handle(The_Game *game)
 
     game->gameplay.player.vel.x /= 1.1;
     game->gameplay.player.vel.y /= 1.1;
-
-
-    
-
 }
 
 void game_player_render(The_Game *game)

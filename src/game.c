@@ -9,6 +9,7 @@
 #include "s2hooks.h"
 #include "texture.h"
 #include "types.h"
+#include "diagnostics.h"
 #include <SDL2/SDL_timer.h>
 #include <math.h>
 #include <stdio.h>
@@ -178,7 +179,9 @@ void game_gameplay_render(The_Game *game)
     }
     
     
-    game_render_rooms(game, game->gameplay.root_room, 0, 0);
+    Vec(Game_Vec2) visited = vec_new(Game_Vec2);
+    game_render_rooms(game, &visited, game->gameplay.root_room, 0, 0);
+    vec_drop(visited);
     game_render_entities(game);
 
     char text_buffer[256];
@@ -200,24 +203,40 @@ void game_gameplay_handle(The_Game *game)
 }
 
 
-void game_rooms_drop(Game_Room *r)
+void game_rooms_drop(Game_Room *r, Vec(Game_Vec2) *visited)
 {
+    if (r == NULL) return;
+
+    for (int i = 0; i < visited->size; i += 1)
+    {
+        Game_Vec2 el = vec_index(*visited, Game_Vec2, i);
+        if (el.x == r->x && el.y == r->y)
+        {
+            return;
+        } 
+    }
+
+    vec_push_ref(visited, ((Game_Vec2) { r->x, r->y }));
+
     if (r)
     {
-        game_rooms_drop(r->bottom);
-        game_rooms_drop(r->top);
-        game_rooms_drop(r->left);
-        game_rooms_drop(r->right);
+        game_rooms_drop(r->bottom, visited);
+        game_rooms_drop(r->top, visited);
+        game_rooms_drop(r->left, visited);
+        game_rooms_drop(r->right, visited);
 
         delete(r);
     }
+
     return;
 }
 
 u32 last_time = 0;
 
 void game_drop(The_Game *g) {
-    game_rooms_drop(g->gameplay.root_room);
+    Vec(Game_Vec2) visited = vec_new(Game_Vec2);
+    game_rooms_drop(g->gameplay.root_room, &visited);
+    vec_drop(visited);
     vec_drop(g->gameplay.colliders);
     game_texture_drop(g->textures.tileset);
     game_texture_drop(g->textures.mazes);
@@ -292,7 +311,9 @@ The_Game game_init(int room_count)
     if (room_count > 0) {
         game_create_rooms(&g, room_count);
         g.gameplay.root_room->maze_type = 0;
-        game_create_room_colliders(&g, g.gameplay.root_room);
+        Vec(Game_Vec2) visited = vec_new(Game_Vec2);
+        game_create_room_colliders(&g, g.gameplay.root_room, &visited);
+        vec_drop(visited);
     }
     
     return g;
@@ -306,7 +327,7 @@ void game_colliders_render(The_Game *g) {
         Game_Vec2 position = {el.r.x, el.r.y};   
         game_remap_to_camera(&position, &g->gameplay.cam);
    
-        game_screen_rect(position.x, position.y, el.r.w, el.r.h, el.active ? 0xFFFF0000 : 0xFFFF9999); 
+        game_screen_rect(position.x, position.y, el.r.w, el.r.h, el.active ? 0x66FF0000 : 0x66FF9999); 
     }
 }
 
@@ -314,10 +335,24 @@ void game_reinit(The_Game *g)
 {
     game_drop(g);
     int score = g->score;
-    int rooms = (g->menu.picked+1)*(g->menu.picked+1)+1;
-    if (g->menu.picked == 3) {
+    int rooms = (g->menu.picked+1)*(g->menu.picked+1)+4;
+    switch (g->menu.picked)
+    {
+    case 0:
+        rooms = 12;
+        break;
+    case 1:
+    case 2:
+        rooms = 22+game_random()%5;
+        break;
+    case 3:
         rooms = 100;
-    }
+        rooms = 400+game_random()%100;
+        break;
+    default:
+        rooms = 1;
+        break;
+    } 
     *g = game_init(rooms);
     g->score += score;
 }
@@ -328,6 +363,9 @@ double delta = 0;
 int cscore = 0;
 
 void game_loop(The_Game *g) {
+    game_global_diagnostics.fps = 0;
+    game_global_diagnostics.skipped_rooms = 0;
+    game_global_diagnostics.total_rooms = 0;
     game_screen_clear(0xFF000000);
 
     game_render_bg(g);
@@ -348,7 +386,7 @@ void game_loop(The_Game *g) {
     break;
     case GAME_STATE_FINISH:
         game_screen_write("You did it!", (game_screen.width/2)-(11*8/2), 48);
-        cscore += ((double)(g->time_remaining/1000.0))*((double)((g->menu.picked+1)*(g->menu.picked+1)*(g->menu.picked+1)*(g->menu.picked+1)));
+        cscore += ((double)(g->time_remaining/1000.0))*((double)((g->menu.picked+1)*(g->menu.picked+1)*(g->menu.picked+1)*(g->menu.picked+1)*10));
         sprintf(text_buffer, "Time bonus: %d", cscore);
         game_screen_write(text_buffer, 80, 48+16);
 

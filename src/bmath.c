@@ -4,12 +4,12 @@ static u32 seed = 1;
 
 void game_seed(int ns) 
 {
-    seed = (u32) ns & 0x7fffffffU;
+    seed = (u32) ns;
 }
 
 int game_random() 
 {
-    seed = (seed * 1103515245U + 12345U) & 0x7fffffffU;
+    seed = (seed * 1103515245U + 12345U) >> 5;
     return (int)seed;
 }
 

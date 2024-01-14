@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-/// BAD
 void game_player_handle(The_Game *game)
 {
+    game->fire_tick -= game->delta;
     game->gameplay.cam.x = game->gameplay.player.pos.x;
     game->gameplay.cam.y = game->gameplay.player.pos.y;
 
@@ -67,11 +67,11 @@ void game_player_handle(The_Game *game)
         {
             if (srect.solid)
             {
-                Game_Vec2 displacement = {game->gameplay.player.pos.x+game->gameplay.player.vel.x*game->delta,
-                        game->gameplay.player.pos.y+game->gameplay.player.vel.y*game->delta};
-                Game_Vec2 difference = {(displacement.x - srect.r.x), (displacement.y - srect.r.y)};
-                game->gameplay.player.vel.x = difference.x;
-                game->gameplay.player.vel.y = difference.y;
+                Game_Vec2 snap = game_rect_vs_rect_snap(sc.r, srect.r);
+                game->gameplay.player.pos.x += snap.x;
+                game->gameplay.player.pos.y += snap.y;
+                game->gameplay.player.vel.x = 0;
+                game->gameplay.player.vel.y = 0;
             }
             else if (srect.zombie && srect.active)
             {
@@ -88,8 +88,9 @@ void game_player_handle(The_Game *game)
     game->gameplay.player.pos.x += game->gameplay.player.vel.x*game->delta;
     game->gameplay.player.pos.y += game->gameplay.player.vel.y*game->delta;
 
-    if (!game->keys.a1 && game->keys.a2)
+    if (game->keys.a1 && !game->keys.a2 && game->fire_tick <= 0)
     {
+        game->fire_tick = 0.5;
         if (game->gameplay.player.dir == 1)
             game_add_projectile(game, game->gameplay.player.pos.x, game->gameplay.player.pos.y, -100, 0);
         if (game->gameplay.player.dir == 3)

@@ -32,10 +32,6 @@ typedef struct Game_Room_T
     struct Game_Room_T *bottom;
     struct Game_Room_T *left;
     struct Game_Room_T *right;
-    bool door_bottom;
-    bool door_left;
-    bool door_right;
-    bool door_top;
     int maze_type;
     int x;
     int y;
@@ -82,6 +78,7 @@ typedef struct
     i32 time_remaining;
     double uptime;
     double start_time;
+    double fire_tick;
     double delta;
     int score;
 } The_Game;

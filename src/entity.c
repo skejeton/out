@@ -14,7 +14,7 @@ void game_add_projectile(The_Game *game, double x, double y, double vx, double v
         .zombie = false,
         .projectile = true,
         .solid = false,
-        .r = { 0, 0, 8, 8 }
+        .r = { x, y, 8, 8 }
     };
 
     Game_Entity e = { 
@@ -41,16 +41,18 @@ void game_add_projectile(The_Game *game, double x, double y, double vx, double v
 
 void game_add_zombie(The_Game *game, double x, double y)
 {
-    Game_Entity e;
-
     Game_Collider collider = {
         .active = true,
         .zombie = true,
         .projectile = false,
         .solid = false,
-        .r = { 2, 10, 16-4, 16-10 }
+        .r = { x+2, y+10, 16-4, 16-10 }
     };
 
+    
+    
+    
+    Game_Entity e;
 
     e.collider_id = vec_push(game->gameplay.colliders, collider);
     e.dir = 0;
@@ -80,84 +82,62 @@ void game_handle_entities(The_Game *game)
         Game_Entity *entity = &game->gameplay.entities[i];
         if (entity->entity_type == GAME_ENTITY_NONE) continue;
         Game_Collider *collider = entity_collider(game, entity);
-        Game_Vec2 r = {entity->pos.x,entity->pos.y};   
+        Game_Vec2 r = {collider->r.x,collider->r.y};   
         game_remap_to_camera(&r, &game->gameplay.cam);
         if (entity->entity_type == GAME_ENTITY_ZOMBIE)
         {
-            entity->vel.x = (game->gameplay.player.pos.x-entity->pos.x)/1.1;
-            entity->vel.y = (game->gameplay.player.pos.y-entity->pos.y)/1.1;
+            entity->vel.x = (game->gameplay.player.pos.x-collider->r.x)/1.1;
+            entity->vel.y = (game->gameplay.player.pos.y-collider->r.y)/1.1;
             if (entity->vel.x < 0 && entity->vel.x > entity->vel.y) entity->dir = 1; 
             if (entity->vel.x > 0 && entity->vel.x > entity->vel.y) entity->dir = 3; 
             if (entity->vel.y < 0 && entity->vel.y > entity->vel.x) entity->dir = 0; 
             if (entity->vel.y > 0 && entity->vel.y > entity->vel.x) entity->dir = 2; 
             entity->state = ENTITY_STATE_WALK;
             
-            Game_Vec2 vp = {entity->pos.x, entity->pos.y};
+            Game_Vec2 vp = {collider->r.x, collider->r.y};
             game_remap_to_camera(&vp, &game->gameplay.cam);
             if (vp.x < 0) continue;
             if (vp.y < 0) continue;
             if (vp.x > game_screen.width) continue;
             if (vp.y > game_screen.width) continue;
 
-            Game_Collider sc;
-            sc.r.x = entity->pos.x+entity->vel.y*game->delta+2;
-            sc.r.y = entity->pos.y+entity->vel.y*game->delta+10;
-            sc.r.w = 16-4;
-            sc.r.h = 16-10;
-
             for (int i = 0; i < (game->gameplay.colliders.size); i++)
             {
-                Game_Collider srect = vec_index(game->gameplay.colliders, Game_Collider, i);
-                bool col = game_check_collision(&srect, &sc);
+                Game_Collider *srect = vec_index_ptr(game->gameplay.colliders, Game_Collider, i);
+                bool col = game_check_collision(srect, collider);
                 if (col)
                 {
-                    if (srect.solid)
+                    if (srect->solid)
                     {
-                        Game_Vec2 displacement = {entity->pos.x+entity->vel.x*game->delta,
-                                entity->pos.y+entity->vel.y*game->delta};
-                        Game_Vec2 difference = {(displacement.x - srect.r.x), (displacement.y - srect.r.y)};
-                        entity->vel.x = difference.x;
-                        entity->vel.y = difference.y;
-                        break;
+                        Game_Vec2 snap = game_rect_vs_rect_snap(collider->r, srect->r);
+                        collider->r.x += snap.x;
+                        collider->r.y += snap.y;
+                        entity->vel.x = 0;
+                        entity->vel.y = 0;
                     }
-                    else if (srect.projectile && srect.active)
+                    else if (srect->projectile && srect->active)
                     {
-                        // I have no clue what I'm doing, this code is bad
-                        // And if needed, I will refactor it!
-                        // This is a very bad fix but I don't care
-                        for (int k = 0; k < 256; k++)
-                        {
-                            Game_Entity *sub_entity = &game->gameplay.entities[k];
-                            if (sub_entity->entity_type == GAME_ENTITY_NONE) continue;
-                            if (sub_entity->collider_id == i)
-                                sub_entity->entity_type = GAME_ENTITY_NONE;
-                            
-                        }
-
                         collider->active = false;
+                        srect->active = false;
                         entity->entity_type = GAME_ENTITY_NONE;
                         game->gameplay.entity_count -= 1;
                         game->gameplay.kill_count += 1;
-                        srect.active = false;
                         break;
                     }
                 }
             }
 
-            entity->pos.x += entity->vel.x*game->delta;
-            entity->pos.y += entity->vel.y*game->delta;
-            collider->r.x = entity->pos.x;
-            collider->r.y = entity->pos.y+6;
-
+            collider->r.x += entity->vel.x*game->delta;
+            collider->r.y += entity->vel.y*game->delta;
+            entity->pos.x = collider->r.x-3;
+            entity->pos.y = collider->r.y-10;
         }
         else if (entity->entity_type == GAME_ENTITY_PROJECTILE)
         {
-            entity->pos.x += entity->vel.x*game->delta;
-            entity->pos.y += entity->vel.y*game->delta;
-            collider->r.x = entity->pos.x;
-            collider->r.y = entity->pos.y;
+            collider->r.x += entity->vel.x*game->delta;
+            collider->r.y += entity->vel.y*game->delta;
 
-            if (entity->dir > 1000)
+            if (entity->dir > 1000 || !collider->active)
             {
                 collider->active = false;
                 entity->entity_type = GAME_ENTITY_NONE;
@@ -167,9 +147,10 @@ void game_handle_entities(The_Game *game)
 
             // Actually lifespan of entity
             entity->dir += 1000*game->delta;
+            entity->pos.x = collider->r.x;
+            entity->pos.y = collider->r.y;
+
         }
-
-
     }
 }
 

@@ -190,8 +190,24 @@ void game_screen_blit_at(Game_Texture *tex, int x, int y)
 
 void game_screen_rect(int x, int y, int width, int height, int color)
 {
-    SDL_Rect r = { .x = x, .y = y, .w = width, .h = height };
-    SDL_RenderFillRect(renderer, &r);
+#ifndef __EMSCRIPTEN__
+    int w;
+    int h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    int xo = w/2-(scalex*320)/2;
+    int yo = h/2-(scaley*200)/2;
+    SDL_Rect clip_rect = { .x = xo, .y = yo, .w = scalex*320, .h = scaley*200 };
+    SDL_RenderSetClipRect(renderer, &clip_rect);
+
+    SDL_Rect r = { .x = x*scalex+xo, .y = y*scaley+yo, .w = width*scalex, .h = height*scaley };    
+    SDL_SetRenderDrawColor(renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
+    SDL_RenderDrawRect(renderer, &r);
+#else
+    SDL_Rect r = { .x = x*2, .y = y*2, .w = width*2, .h = height*2 };    
+    SDL_SetRenderDrawColor(renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
+    SDL_RenderDrawRect(renderer, &r);
+#endif
 }
 
 void game_screen_paint()

@@ -16,7 +16,7 @@ The game is cross compilable on linux
 
 ## On Windows
 
-Install MSVC, use `build.bat` to compile. You need `%LibSDL2MSVC%` environment variable defined, pointing to the SDL2 directory you downloaded from latest SDL2 release. Note that in `%LibSDL2MSVC%\include` you need to move all `.h` files into another `SDL2` directory, so that the include path is `%LibSDL2MSVC%\include\SDL2`. The build script will automatically generate a `compile_flags.txt` file for your intellisense.
+Install MSVC, use `build.bat` to compile. You need `%LibSDL2MSVC%` environment variable defined, pointing to the SDL2 directory you downloaded from [latest SDL2 release](https://github.com/libsdl-org/SDL/releases). Make sure to download the version that ends with `VC`. Note that in `%LibSDL2MSVC%\include` you need to move all `.h` files into another `SDL2` directory, so that the include path is `%LibSDL2MSVC%\include\SDL2`. The build script will automatically generate a `compile_flags.txt` file for your intellisense.
 
 ## On MacOS
 

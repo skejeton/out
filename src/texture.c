@@ -1,4 +1,5 @@
 #include "texture.h"
+#include "SDL2/SDL_video.h"
 #include "event.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_rect.h>
@@ -6,6 +7,9 @@
 #include <SDL2/SDL_surface.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 Game_Texture game_screen;
 Game_Texture game_font;
@@ -16,17 +20,36 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Window *window = NULL;
 
 void init_renderer() {
+    float dpi_x = 1.0, dpi_y = 1.0;
+
+#ifdef _WIN32
+    SetProcessDPIAware();
+    UINT dpi = GetDpiForSystem();
+    dpi_x = dpi / 96.0;
+    dpi_y = dpi / 96.0;
+#else
+    SDL_GetDisplayDPI(0, NULL, &dpi_x, &dpi_y);
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         printf("error initializing SDL: %s\n", SDL_GetError());
     }
+
     SDL_Window* win = SDL_CreateWindow("IIIIIIIIIIIITNEVMKXVMKMkrenvskrnvEKSVMCVKMCKV<MKC<MVKMCVKVKKVKKKVVKVKVNCKENVKCENXKENVKRENKSTRTn", 
                                        SDL_WINDOWPOS_CENTERED,
                                        SDL_WINDOWPOS_CENTERED,
-                                       320*2, 200*2, SDL_WINDOW_RESIZABLE);
+                                       320*2*dpi_x, 200*2*dpi_y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
  
     SDL_Renderer* rend = SDL_CreateRenderer(win, -1, 0);
     window = win;
     renderer = rend;
+
+    int w;
+    int h;
+    SDL_GetWindowSize(window, &w, &h);
+
+    scalex = w/320;
+    scaley = h/200;
 }
 
 void game_screen_init()

@@ -91,6 +91,8 @@ static void poll_event() {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                     #define max(a,b) (((a)>(b))?(a):(b))
                     #define min(a,b) (((a)<(b))?(a):(b))
+
+                    int w, h;
                     scalex = max(event.window.data1/320, 1);
                     scaley = max(event.window.data2/200, 1);
 

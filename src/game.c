@@ -14,19 +14,15 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
 #endif
 #include <time.h>
-#include <unistd.h>
 
 
 u32 ms_uptime() {
-    struct timeval start;
-    gettimeofday(&start, NULL);
-    return (u32)ceil(((double)start.tv_usec/1000.0))+start.tv_sec*1000;
+    return SDL_GetTicks();
 }
 
 

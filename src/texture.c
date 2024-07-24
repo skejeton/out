@@ -58,6 +58,34 @@ void game_screen_init()
     game_screen = (Game_Texture) { .width = 320, .height = 200 }; 
 }
 
+void game_screen_measure(char *str, int *w, int *h)
+{
+    int x = 0;
+    int y = 0;
+    int left = x;
+    int i = 0;
+    while (str[i] != '\0')
+    {
+        if (str[i] == ' ')
+        {
+            x += 8;
+            i++;
+            continue;
+        }
+        if (str[i] == '\n') {
+            y += 8;
+            x = left;
+            i++;
+            continue;
+        }
+        x += 8;
+        i++;
+    }
+    y += 8;
+    *w = x;
+    *h = y;
+}
+
 void game_screen_write(char *str, int x, int y)
 {
     int left = x;
@@ -213,24 +241,11 @@ void game_screen_blit_at(Game_Texture *tex, int x, int y)
 
 void game_screen_rect(int x, int y, int width, int height, int color)
 {
-#ifndef __EMSCRIPTEN__
-    int w;
-    int h;
-    SDL_GetWindowSize(window, &w, &h);
-
-    int xo = w/2-(scalex*320)/2;
-    int yo = h/2-(scaley*200)/2;
-    SDL_Rect clip_rect = { .x = xo, .y = yo, .w = scalex*320, .h = scaley*200 };
-    SDL_RenderSetClipRect(renderer, &clip_rect);
-
-    SDL_Rect r = { .x = x*scalex+xo, .y = y*scaley+yo, .w = width*scalex, .h = height*scaley };    
+    SDL_RenderSetScale(renderer, scalex, scaley);
+    SDL_Rect r = { .x = x, .y = y, .w = width, .h = height };    
     SDL_SetRenderDrawColor(renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
     SDL_RenderDrawRect(renderer, &r);
-#else
-    SDL_Rect r = { .x = x*2, .y = y*2, .w = width*2, .h = height*2 };    
-    SDL_SetRenderDrawColor(renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
-    SDL_RenderDrawRect(renderer, &r);
-#endif
+    SDL_RenderSetScale(renderer, 1, 1);
 }
 
 void game_screen_paint()

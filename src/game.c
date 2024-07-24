@@ -14,6 +14,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "ui.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -46,17 +47,44 @@ Event await_wrapped(The_Game *g) {
 #define GAME_STATE_FINISH 2
 #define GAME_STATE_FAIL 3
 
+void game_reinit(The_Game *g);
+
+void game_start_at(The_Game *game, int pick)
+{
+    game_reinit(game);
+    game->menu.picked = pick;
+    game->time_remaining = game->times[pick];
+    game->state = GAME_STATE_GAMEPLAY;
+}
+
+int tab = 0;
 
 void game_menu_render(The_Game *game)
 {
     game_screen_blit_rect(&game->textures.tileset, 160-(197/2), 20, 0, 128, 197, 32);
 
-    game_screen_write("Easy", 160-(197/4), 100);
-    game_screen_write("Medium", 160-(197/4), 110);
-    game_screen_write("Hard", 160-(197/4), 120);
-    game_screen_write("Good luck lol", 160-(197/4), 130);
+    if (tab == 0) {
+        ui_begin(320/2, 100, M_COL, J_MID);
+        ui_padding(3);
+        if (ui_button("Easy")) { game_start_at(game, 0); }
+        if (ui_button("Medium")) { game_start_at(game, 1); }
+        if (ui_button("Hard")) { game_start_at(game, 2); }
+        if (ui_button("Good luck lol")) { game_start_at(game, 3); }
+        if (ui_button("More")) { tab++; }
+    } else {
+        ui_begin(320/2-100, 100, M_ROW, J_LEFT);
+        ui_padding(3);
+        ui_button("Back");
+        ui_button("Statistics");
+        ui_button("About");
+        ui_button("Settings");
+    }
+
     game_screen_write("Arrow keys, Z - Action 1, X - Action 2", 8, 180);
-    game_screen_blit_rect(&game->textures.tileset, 160-(197/4)-12, 100+(game->menu.picked*10), 128, 8, 8, 8);
+
+    int x, y;
+    ui_cursorpos(&x, &y);
+    game_screen_blit_rect(&game->textures.tileset, x-4, y-4, 128, 8, 8, 8);
     if (game->uptime > 10.0 && !game->menu.used) {
         game_screen_clear(0xFF000000);
         game_screen_write("It seems like you arent doing anything", 8, 50);
@@ -104,11 +132,11 @@ void game_generic_handle(The_Game *game)
 
 }
 
-void game_reinit(The_Game *g);
+bool confirmed = false;
 
 void game_menu_handle(The_Game *game)
 {
-
+    confirmed = false;
     Event ev = unqueue_wrapped(game);
     if (ev.type == EVENT_KEYBOARD)
     {
@@ -121,21 +149,17 @@ void game_menu_handle(The_Game *game)
             }
             game->menu.used = true;
 
-            if (convert_scancode_to_char(kev.key) == 'w' && game->menu.picked > 0)
+            if (convert_scancode_to_char(kev.key) == 'w' || convert_scancode_to_char(kev.key) == 'a')
             {
-                game->menu.picked -= 1;
+                ui_prev();
             }
-            else if (convert_scancode_to_char(kev.key) == 's' && game->menu.picked < 3)
+            else if (convert_scancode_to_char(kev.key) == 's' || convert_scancode_to_char(kev.key) == 'd')
             {
-                game->menu.picked += 1;
+                ui_next();
             }
             else if (convert_scancode_to_char(kev.key) == 'z' || convert_scancode_to_char(kev.key) == 'x')
             {
-                int picked = game->menu.picked;
-                game_reinit(game);
-                game->menu.picked = picked;
-                game->time_remaining = game->times[picked];
-                game->state = GAME_STATE_GAMEPLAY;
+                confirmed = true;
             }
         }
     }
@@ -365,14 +389,14 @@ void game_loop(The_Game *g) {
     game_screen_clear(0xFF000000);
 
     game_render_bg(g);
-    
+    ui_reset(confirmed);
     switch (g->state)
     {
     case GAME_STATE_MENU:
         sprintf(text_buffer, "Score: %d", g->score);
         game_screen_write(text_buffer, 110, 80);
-        game_menu_handle(g);
         game_menu_render(g);
+        game_menu_handle(g);
         cscore = 0;
         break;
     case GAME_STATE_GAMEPLAY:
